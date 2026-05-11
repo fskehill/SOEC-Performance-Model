@@ -1,0 +1,106 @@
+# SOEC Cell Performance Model
+
+A physics-based python model of a Solid Oxide Electrolysis Cell (SOEC).
+Built as a self-directed project alongside a Coursera course from the
+Technical University of Denmark (DTU) on hydrogen key concepts and
+green technologies.
+
+---
+
+## What it models
+
+SOECs split water into green hydrogen and oxygen using electricity
+at ~800°C. They are the most efficient electrolysis technology
+available today.
+
+|       Physics      |     Equation     |                 What it captures                 |
+|        -----       |      ------      |                      ------                      |
+|    Thermodynaics   |  Nernst Equation |      Min. Voltage to split water at temp. T      |
+|      Ohmic Loss    |   Arrhenius ASR  | YSZ ceramic resistance - halves every ~50°C rise |
+|   Activation Loss  |   Butler-Volmer  |        Energy barrier at electrode surface       |
+| Concentration Loss |  Fick Diffusion  |      Gas starvation at high current density      |
+
+Total Cell Voltage: **V_cell = V_ocv + η_ohm + η_act + η_con**
+
+---
+
+## Results
+
+![SOEC Results](outputs/SOEC_Results.png)
+
+| Temperature | OCV (V) | V @ 1 A/cm² | Efficiency |
+|    -----    |   ---   |    -----    |    ----    |
+|    750°C    |  0.988  |   2.107 V   |   70.2 %   |
+|    800°C    |  0.972  |   2.016 V   |   73.4 %   |
+|    850°C    |  0.957  |   1.931 V   |   76.7 %   |
+
+---
+
+## Current Version: 0D
+
+The model currently calculates performance at a single representative
+point in the cell - one temperature, one gas composition, one voltage
+per current density value. No spatial variation.
+
+---
+
+## Roadmap
+
+|   Version   |                      What it adds                      |      Status      |
+|    -----    |                         ------                         |      ------      |
+|     0D      |           Single point, avg. gas composition           |       Done.      |
+|    0.5D     | Inlet & Outlet calculated seperatley, fuel utilisation |    In progress   |
+|     1D      |            Full variation along cell length            |      Planned     |
+|    2D/3D    |     Spatial temp. & current density distributions      |      Planned     |
+
+Following the modelling hierarchy used in published research from
+DTU Energy (Nemati et al., 2024).
+
+---
+
+## How to run
+
+```bash
+pip install numpy matplotlib
+python main.py
+```
+
+Output saves to `outputs/SOEC_Results.png`
+
+---
+
+## Project structure
+
+SOEC_Project/
+├── src/
+|   ├── __init__.py
+|   ├── nernst.py          # Nernst OCV from thermodynamics
+|   ├── overpotentials.py  # Butler-Volmer, Fick, Arrhenius losses
+|   ├── plotter.py         # 4-panel results figure
+├── outputs/
+|   └── SOEC_Results.png
+└── main.py
+
+# Run this
+
+Each file does one job. Physics, plotting, and parameters are fully
+seperated - changing a material property in one place updates 
+everything automatically.
+
+---
+
+## References
+
+- Nemati et al. (2024) *Energy Conversion and Management*, 308, 118396
+- Laguna-Bercero (2023) *High Temperature Electrolysis*, Springer
+- DTU Energy Lecture: Cell and Stack Modeling (Arash Nemati, DTU)
+- Taubmann et al. (2023) *Journal of Power Sources*, 588, 233739
+- DTU / Coursera: Hydrogen Key Concepts and Use in Green Technologies
+
+---
+
+## Author
+
+**Finn S.**
+Beng. Mechanical Engineering & Sustainability, Year 1
+Dublin City University
