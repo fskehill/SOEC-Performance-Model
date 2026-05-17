@@ -48,10 +48,11 @@ per current density value. No spatial variation.
 
 |   Version   |                      What it adds                      |      Status      |
 |    -----    |                         ------                         |      ------      |
-|     0D      |           Single point, avg. gas composition           |       Done.      |
-|    0.5D     | Inlet & Outlet calculated seperatley, fuel utilisation |    In progress   |
-|     1D      |            Full variation along cell length            |      Planned     |
-|    2D/3D    |     Spatial temp. & current density distributions      |      Planned     |
+|      0D     |           Single point, avg. gas composition           |       Done.      |
+|     0.5D    | Inlet & Outlet calculated seperatley, fuel utilisation |       Done.      |
+|      1D     |            Full variation along cell length            |       Done.      |
+|      2D     |     Spatial temp. & current density distributions      |      Planned     |
+|      3D     |     Spatial temp. & current density distributions      |      Planned     |
 
 Following the modelling hierarchy used in published research from
 DTU Energy (Nemati et al., 2024).
