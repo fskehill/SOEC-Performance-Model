@@ -15,7 +15,7 @@ available today.
 
 |       Physics      |     Equation     |                 What it captures                 |
 |        -----       |      ------      |                      ------                      |
-|    Thermodynaics   |  Nernst Equation |      Min. Voltage to split water at temp. T      |
+|   Thermodynamics   |  Nernst Equation |      Min. Voltage to split water at temp. T      |
 |      Ohmic Loss    |   Arrhenius ASR  | YSZ ceramic resistance - halves every ~50°C rise |
 |   Activation Loss  |   Butler-Volmer  |        Energy barrier at electrode surface       |
 | Concentration Loss |  Fick Diffusion  |      Gas starvation at high current density      |
@@ -36,11 +36,20 @@ Total Cell Voltage: **V_cell = V_ocv + η_ohm + η_act + η_con**
 
 ---
 
-## Current Version: 0D
+## Validation
 
-The model currently calculates performance at a single representative
-point in the cell - one temperature, one gas composition, one voltage
-per current density value. No spatial variation.
+The 1D model was validated against experimental i-U data from Jensen (2007) 
+at 850°C with 50% H₂O + 50% H₂ inlet gas (Figure 21, Risø-PhD-29). 
+The model polarisation curve sits close to the published before-electrolysis 
+curve, confirming the underlying physics is sound.
+
+---
+
+## Current Version: 1D
+
+The current model divides the cell into 20 nodes along the flow path, tracking 
+how gas composition, local OCV, and overpotentials evolve from inlet to 
+outlet. Fuel utilisation is modelled per temperature (60-70%).
 
 ---
 
@@ -49,7 +58,6 @@ per current density value. No spatial variation.
 |   Version   |                      What it adds                      |      Status      |
 |    -----    |                         ------                         |      ------      |
 |      0D     |           Single point, avg. gas composition           |       Done.      |
-|     0.5D    | Inlet & Outlet calculated seperatley, fuel utilisation |       Done.      |
 |      1D     |            Full variation along cell length            |       Done.      |
 |      2D     |     Spatial temp. & current density distributions      |      Planned     |
 |      3D     |     Spatial temp. & current density distributions      |      Planned     |
@@ -75,17 +83,22 @@ Output saves to `outputs/SOEC_Results.png`
 SOEC_Project/
 ├── src/
 |   ├── __init__.py
-|   ├── nernst.py          # Nernst OCV from thermodynamics
-|   ├── overpotentials.py  # Butler-Volmer, Fick, Arrhenius losses
-|   ├── plotter.py         # 4-panel results figure
+|   ├── cell_1d.py
+|   ├── fuel_utilisation.py
+|   ├── linkedin_plotter.py
+|   ├── nernst.py             # Nernst OCV from thermodynamics
+|   ├── overpotentials.py     # Butler-Volmer, Fick, Arrhenius losses
+|   ├── plotter.py            # 4-panel results figure
+|   ├── validator.py
 ├── outputs/
-|   └── SOEC_Results.png
+|   └── SOEC_LinkedIn.png
+|   ├── SOEC_Results.png
 └── main.py
 
 # Run this
 
 Each file does one job. Physics, plotting, and parameters are fully
-seperated - changing a material property in one place updates 
+separated - changing a material property in one place updates 
 everything automatically.
 
 ---
@@ -97,11 +110,12 @@ everything automatically.
 - DTU Energy Lecture: Cell and Stack Modeling (Arash Nemati, DTU)
 - Taubmann et al. (2023) *Journal of Power Sources*, 588, 233739
 - DTU / Coursera: Hydrogen Key Concepts and Use in Green Technologies
+- Jensen, S.H. (2007) *Solid Oxide Electrolyser Cell* Risø-PhD-29(EN), DTU
 
 ---
 
 ## Author
 
 **Finn S.**
-Beng. Mechanical Engineering & Sustainability, Year 1
+BEng Mechanical Engineering & Sustainability, Year 1
 Dublin City University
