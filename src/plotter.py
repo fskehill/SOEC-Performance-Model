@@ -140,7 +140,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     ax6.set_ylabel('Local OCV (V)', fontsize=10)
     ax6.set_title('6. OCV Profile Along Cell', fontsize=11,
                   fontweight='bold', pad=8)
-    ax6.text(0.1, 1.07,
+    ax6.text(0.1, 1.055,
              'OCV rises as H2O is consumed and H2 builds up',
              color='#909090', fontsize=7.5, fontstyle='italic')
     make_legend(ax6, loc='lower right')
