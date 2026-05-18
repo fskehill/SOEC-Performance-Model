@@ -50,9 +50,12 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
                   fontweight='bold', pad=8)
     ax1.text(0.03, 0.90, 'Higher T = lower voltage = higher efficiency',
              color='#909090', fontsize=7.5, fontstyle='italic')
+    ax1.text(0.5, 1.06,
+             '- Jensen (2007): 850°C, 50% H₂O/50% H₂',
+             color='#aaaaaa', fontsize=7, fontstyle='italic')
     if j_exp is not None and 'V_jensen' in results:
-        ax1.plot(j, results['V_jensen'], color='white',
-                 lw=2, ls=':', alpha=0.6, label='Model @ Jensen conditions')
+        ax1.scatter(j_exp, V_exp, color='white', s=50,
+                    zorder=7, marker='o', label='Jensen (2007) exp.')
     make_legend(ax1, loc='upper left')
     style(ax1)
 

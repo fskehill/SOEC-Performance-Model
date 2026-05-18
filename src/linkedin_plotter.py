@@ -45,8 +45,8 @@ def plot_linkedin(j, results, T_list, T_labels, V_thermo, save_path,
     ax1.axhline(V_thermo, color=GOLD, ls='--', lw=1.4,
                 label=f'V_thermo = {V_thermo} V')
     if j_exp is not None and 'V_jensen' in results:
-        ax1.plot(j, results['V_jensen'], color='white',
-                 lw=2, ls=':', alpha=0.6, label='Jensen (2007) exp.')
+        ax1.scatter(j_exp, V_exp, color='white', s=50,
+                    zorder=7, marker='o', label='Jensen (2007) exp.')
     ax1.set_xlim(0, 1.6); ax1.set_ylim(0.85, 2.1)
     ax1.set_xlabel('Current Density j (A/cm²)', fontsize=10)
     ax1.set_ylabel('Cell Voltage V_cell (V)', fontsize=10)
@@ -54,6 +54,9 @@ def plot_linkedin(j, results, T_list, T_labels, V_thermo, save_path,
                   fontweight='bold', pad=8)
     ax1.text(0.03, 0.90, 'Higher T → lower voltage → higher efficiency',
              color='#909090', fontsize=7.5, fontstyle='italic')
+    ax1.text(0.5, 1.04,
+             '- Jensen (2007): 850°C, 50% H₂O/50% H₂',
+             color='#aaaaaa', fontsize=7, fontstyle='italic')
     _legend(ax1, loc='upper left')
     _style(ax1)
 

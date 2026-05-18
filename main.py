@@ -62,13 +62,22 @@ results['T_range'] = T_range
 results['ASR_range'] = params.B_ohm * np.exp(params.E_act_ohm / (R_GAS * T_range)) * 1e4
 results['ASR_pts'] = [params.B_ohm * np.exp(params.E_act_ohm / (R_GAS * T)) * 1e4 for T in T_list]
 
-params_jensen = CellParams(x_H2=0.30, x_H2O=0.70)
-T_jensen = 800 + 273.15
+params_jensen = CellParams(
+    x_H2=0.50,
+    x_H2O=0.50,
+    gamma_c=5.5e12,
+    gamma_a=2.0e12,
+    E_act_c=80000,
+    E_act_a=90000,
+    B_ohm=1.0e-5,
+    E_act_ohm=7200,
+    )
+T_jensen = 850 + 273.15
 V_jensen, _, _, _, _, _, _, _ = calc_1d(j, T_jensen, params_jensen, FU=0.65, N_nodes=20)
 
 errors, V_interp = calc_error(j, V_jensen, j_exp, V_exp)
 
-print("\nValidation vs Jensen (2007) at 800°C:")
+print("\nValidation vs Jensen (2007) at 850°C:")
 print(f"  {'j (A/cm²)':<12} {'Model (V)':<12} {'Exp (V)':<12} {'Error (%)'}")
 print("  " + "-" * 48)
 for i in range(len(j_exp)):

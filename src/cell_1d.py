@@ -1,6 +1,11 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 from src.nernst import calc_ocv
 from src.overpotentials import CellParams, calc_overpotentials
+import dataclasses
 
 def calc_1d(j, T, params, FU, N_nodes=20):
     """
@@ -55,7 +60,7 @@ def calc_1d(j, T, params, FU, N_nodes=20):
                               params.x_O2, params.P)
         V_ocv_nodes.append(V_ocv_node)
 
-        params_node = CellParams(x_H2=x_H2_local, x_H2O=x_H2O_local)
+        params_node = dataclasses.replace(params, x_H2=x_H2_local, x_H2O=x_H2O_local)
         eta_o, eta_a, eta_c = calc_overpotentials(j, T, params_node)
 
         eta_ohm_nodes.append(eta_o)
