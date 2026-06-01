@@ -1,7 +1,7 @@
 import numpy as np
 
 # Digitised from Jensen (2007) Risø-PhD-29
-# Conditions: 850°C, 70% H2O + 30% H2 inlet, 1 atm
+# Conditions: 850°C, 50% H2O + 50% H2 inlet, 1 atm
 
 j_exp = [0.0, 0.2, 0.4, 0.6, 0.8]
 V_exp = [1.00, 1.05, 1.10, 1.15, 1.20]

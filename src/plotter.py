@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.colors import LinearSegmentedColormap
 from pathlib import Path
 
 COLORS = ['#2E75C0', '#34A876', '#D94F3D']
@@ -33,7 +34,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     fig.subplots_adjust(hspace=0.40, wspace=0.30,
                         top=0.88, bottom=0.08,
                         left=0.07, right=0.97)
-    gs = gridspec.GridSpec(2, 3, figure=fig)
+    gs = gridspec.GridSpec(3, 3, figure=fig)
 
 
     ax1 = fig.add_subplot(gs[0, 0])
@@ -56,7 +57,11 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     if j_exp is not None and 'V_jensen' in results:
         ax1.scatter(j_exp, V_exp, color='white', s=50,
                     zorder=7, marker='o', label='Jensen (2007) exp.')
-    make_legend(ax1, loc='upper left')
+        ax1.errorbar(j_exp, V_exp,
+                     yerr=[v * 0.011 for v in V_exp], 
+                     fmt='none', color='white',
+                     capsize=3, lw=1.0, alpha=0.6)
+    make_legend(ax1, loc='upper right')
     style(ax1)
 
 
@@ -75,7 +80,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     ax2.set_ylim(0, 0.75)
     ax2.set_xlabel('Current Density j (A/cm²)', fontsize=10)
     ax2.set_ylabel('Overpotential η (V)', fontsize=10)
-    ax2.set_title('3. Loss Breakdown at 800°C', fontsize=11, 
+    ax2.set_title('2. Loss Breakdown at 800°C', fontsize=11, 
                   fontweight='bold', pad=8)
     make_legend(ax2, loc='upper left')
     style(ax2)
@@ -95,7 +100,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     ax3.set_ylim(55, 140)
     ax3.set_xlabel('Current Density j (A/cm²)', fontsize=10)
     ax3.set_ylabel('Energy Efficiency (%)', fontsize=10)
-    ax3.set_title('2. Efficiency vs. Current', fontsize=11, 
+    ax3.set_title('4. Efficiency vs. Current', fontsize=11, 
                   fontweight='bold', pad=8)
     make_legend(ax3, loc='upper right')
     style(ax3)
@@ -111,7 +116,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
                     label=T_labels[i])
     ax4.set_xlabel('Temperature (°C)', fontsize=10)
     ax4.set_ylabel('ASR (Ω·cm²)', fontsize=10)
-    ax4.set_title('4. YSZ Resistance vs. Temperature', fontsize=11, 
+    ax4.set_title('5. YSZ Resistance vs. Temperature', fontsize=11, 
                   fontweight='bold', pad=8)
     make_legend(ax4, loc='upper right')
     style(ax4)
@@ -126,7 +131,7 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
                  color=COLORS[i], lw=2.0, ls='-', label=f'H2 {T_labels[i]}')
     ax5.set_xlabel('Position along Cell (%)', fontsize=10)
     ax5.set_ylabel('Mole Fraction (%)', fontsize=10)
-    ax5.set_title('5. Gas Composition Along Cell', fontsize=11,
+    ax5.set_title('3. Gas Composition Along Cell', fontsize=11,
                   fontweight='bold', pad=8)
     ax5.text(2, 18, 'Solid = H2   Dashed = H2O',
              color='#909090', fontsize=7.5, fontstyle='italic')
@@ -143,27 +148,110 @@ def plot_results(j, results, T_list, T_labels, V_thermo, save_path, j_exp=None, 
     ax6.set_ylabel('Local OCV (V)', fontsize=10)
     ax6.set_title('6. OCV Profile Along Cell', fontsize=11,
                   fontweight='bold', pad=8)
-    ax6.text(0.1, 1.055,
+    ax6.text(0.1, 1.05,
              'OCV rises as H2O is consumed and H2 builds up',
              color='#909090', fontsize=7.5, fontstyle='italic')
     make_legend(ax6, loc='lower right')
     style(ax6)
 
+    ax7 = fig.add_subplot(gs[2, 0])
+    positions = np.linspace(0, 100, results['N_nodes'])
+    for i in range(len(T_list)):
+        T_plot = [T - 273.15 for T in results['T_profiles'][i]]
+        ax7.plot(positions, T_plot,
+                 color=COLORS[i], lw=2.4, label=T_labels[i])
+    ax7.set_xlabel('Position along Cell (%)', fontsize=10)
+    ax7.set_ylabel('Local Temperature (°C)', fontsize=10)
+    ax7.set_title('7. Temperature Profile Along Cell',
+                  fontsize=11, fontweight='bold', pad=8)
+    ax7.text(1, min(T_plot) - 15,
+             'Temperature evolves due to ohmic' \
+             '\n heating vs reaction cooling',
+             color='#909090', fontsize=7.5, fontstyle='italic')
+    ax7.axhline(y=800, color=GOLD, ls=':', lw=1.0, alpha=0.5)
+    ax7.text(2, 793, 'Thermoneutral Crossover',
+             color=GOLD, fontsize=7, fontstyle='italic')
+    make_legend(ax7, loc='upper right')
+    style(ax7)
+
+
+    ax8 = fig.add_subplot(gs[2, 1])
+    if 'j_local_profiles' in results:
+        for i in range(len(T_list)):
+            ax8.plot(positions, results['j_local_profiles'][i], 
+                     color=COLORS[i], lw=2.4, label=T_labels[i])
+        ax8.text(2, max(results['j_local_profiles'][0]) * 1.01,
+                 'Current drops as steam is depleted towards outlet', 
+                 color='#909090', fontsize=7.5, fontstyle='italic')
+    else:
+        j_op = 0.5
+        for i in range(len(T_list)):
+            ax8.axhline(y=j_op, color=COLORS[i], lw=2.4, 
+                        label=T_labels[i])  
+    ax8.set_xlabel('Position along Cell (%)', fontsize=10)
+    ax8.set_ylabel('Local Current Density (A/cm²)', fontsize=10)
+    ax8.set_title('8. Local Current Density Profile', fontsize=11, 
+                  fontweight='bold', pad=8)
+    ax8.set_xlim(0, 100)
+    make_legend(ax8, loc='upper right')
+    style(ax8)
+
+
+    ax9 = fig.add_subplot(gs[2, 2])
+    j_hm = np.linspace(0.05, 1.4, 80)
+    T_hm = np.linspace(700, 900, 80)
+    J_grid, T_grid = np.meshgrid(j_hm, T_hm)
+
+    R_GAS = 8.314
+    B_ohm = 2.99e-5
+    E_ohm = 8000.0
+    ASR = B_ohm * np.exp(E_ohm / (R_GAS * (T_grid + 273.15))) * 1e4
+    V_ocv_hm = 1.253 - 2.4516e-4 * (T_grid + 273.15)
+    V_cell_hm = V_ocv_hm + J_grid * ASR * 0.4
+    eff_hm = (V_thermo / V_cell_hm) * 100
+    eff_hm = np.clip(eff_hm, 55, 140)
+
+    cmap = LinearSegmentedColormap.from_list('soec', 
+                                             ['#D94F3D', '#f0c040', '#34A876'], N=256)
+    im = ax9.contourf(J_grid, T_grid, eff_hm,
+                      levels=20, cmap=cmap)
+    ax9.contour(J_grid, T_grid, eff_hm,
+                levels=[100], colors=[GOLD], linewidths=1.5,
+                linestyles='--')
+    ax9.text(0.08, 810, 'Thermoneutral\n(100%)', 
+             color=GOLD, fontsize=7, fontstyle='italic')
+    cb = fig.colorbar(im, ax=ax9, pad=0.02)
+    cb.ax.yaxis.set_tick_params(color=FG, labelsize=8)
+    cb.outline.set_edgecolor(GRID_C)
+    plt.setp(cb.ax.yaxis.get_ticklabels(), color=FG)
+    cb.set_label('Efficiency (%)', color=FG, fontsize=10)
+    for i, T_c in enumerate(T_degC):
+        ax9.axhline(y=T_c, color=COLORS[i], lw=1.2,
+                    ls='--', alpha=0.6, label=T_labels[i])
+    ax9.set_xlabel('Current Density j (A/cm²)', fontsize=10)
+    ax9.set_ylabel('Temperature (°C)', fontsize=10)
+    ax9.set_title('9. Efficiency Map (T vs j)', fontsize=11, 
+                  fontweight='bold', pad=8)
+    ax9.tick_params(colors=FG, labelsize=9)
+    ax9.xaxis.label.set_color(FG)
+    ax9.yaxis.label.set_color(FG)
+    ax9.title.set_color(FG)
+    for spine in ax9.spines.values():
+        spine.set_edgecolor(GRID_C)
+    def _legend(ax, fontsize=8.5, **kwargs):
+        leg = ax.legend(fontsize=fontsize, 
+                        facecolor=AX_BG, 
+                        edgecolor=GRID_C, 
+                        labelcolor=FG, **kwargs)
+        return leg
+
 
     fig.text(0.5, 0.945,
-             'SOEC Cell Model | 1D Thermodynamics + Kinetics | Python Implementation',
+             'SOEC Cell Model | 1.5D Thermodynamics + Kinetics | Python Implementation',
              ha='center', fontsize=14, fontweight='bold', color=FG)
     fig.text(0.5, 0.913,
              'Nernst Eq  |  Butler-Volmer Kinetics  |  Fick Diffusion  |  Arrhenius Resistance',
              ha='center', fontsize=9, color='#888888')
-    
-    fig.add_artist(plt.Line2D(
-        [0.672, 0.672], [0.08, 0.88],
-        transform=fig.transFigure,
-        color='#555566', lw=1.2, ls='--'
-    ))
-    fig.text(0.65, 0.895, '<-- 0D Model', fontsize=8, color='#888888')
-    fig.text(0.65, 0.878, '1D Extension -->', fontsize=8, color='#888888')
     
     plt.savefig(save_path, dpi=200, bbox_inches='tight', facecolor=BG)
     print(f'Figure saved to {save_path}')

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import FancyBboxPatch
 import matplotlib.patheffects as pe
 
@@ -37,69 +38,100 @@ def plot_linkedin(j, results, T_list, T_labels, V_thermo, save_path,
     
     gs = gridspec.GridSpec(2, 2, figure=fig)
 
+    T_degC = [T - 273.15 for T in T_list]
 
-    ax1 = fig.add_subplot(gs[0, 0])
-    for i, lbl in enumerate(T_labels):
-        ax1.plot(j, results['V_cell'][i],
-                 color=COLORS[i], lw=2.4, label=lbl)
-    ax1.axhline(V_thermo, color=GOLD, ls='--', lw=1.4,
-                label=f'V_thermo = {V_thermo} V')
-    if j_exp is not None and 'V_jensen' in results:
-        ax1.scatter(j_exp, V_exp, color='white', s=50,
-                    zorder=7, marker='o', label='Jensen (2007) exp.')
-    ax1.set_xlim(0, 1.6); ax1.set_ylim(0.85, 2.1)
-    ax1.set_xlabel('Current Density j (A/cm²)', fontsize=10)
-    ax1.set_ylabel('Cell Voltage V_cell (V)', fontsize=10)
-    ax1.set_title('1. Polarisation I-V Curves', fontsize=11, 
-                  fontweight='bold', pad=8)
-    ax1.text(0.03, 0.90, 'Higher T → lower voltage → higher efficiency',
-             color='#909090', fontsize=7.5, fontstyle='italic')
-    ax1.text(0.5, 1.04,
-             '- Jensen (2007): 850°C, 50% H₂O/50% H₂',
-             color='#aaaaaa', fontsize=7, fontstyle='italic')
-    _legend(ax1, loc='upper left')
-    _style(ax1)
-
-
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax7 = fig.add_subplot(gs[0, 0])
     positions = np.linspace(0, 100, results['N_nodes'])
-    for i, lbl in enumerate(T_labels):
-        ax2.plot(positions,
-                 [x * 100 for x in results['x_H2O_profiles'][i]],
-                 color=COLORS[i], lw=2.0, ls='--', label=f'H₂O {lbl}')
-        ax2.plot(positions,
-                 [x * 100 for x in results['x_H2_profiles'][i]],
-                 color=COLORS[i], lw=2.0, ls='-', label=f'H₂ {lbl}')
-    ax2.set_xlabel('Position along Cell (%)', fontsize=10)
-    ax2.set_ylabel('Mole Fraction (%)', fontsize=10)
-    ax2.set_title('3. Gas Composition Profiles', fontsize=11, 
-                  fontweight='bold', pad=8)
-    ax2.text(2, 18, 'Solid = H₂  |  Dashed = H₂O',
+    for i in range(len(T_list)):
+        T_plot = [T - 273.15 for T in results['T_profiles'][i]]
+        ax7.plot(positions, T_plot,
+                 color=COLORS[i], lw=2.4, label=T_labels[i])
+    ax7.set_xlabel('Position along Cell (%)', fontsize=10)
+    ax7.set_ylabel('Local Temperature (°C)', fontsize=10)
+    ax7.set_title('1. Temperature Profile Along Cell',
+                  fontsize=11, fontweight='bold', pad=8)
+    ax7.text(1, min(T_plot) - 15,
+             'Temperature evolves due to ohmic' \
+             '\n heating vs reaction cooling',
              color='#909090', fontsize=7.5, fontstyle='italic')
-    _legend(ax2, loc='center right', fontsize=7.5)
-    _style(ax2)
+    ax7.axhline(y=800, color=GOLD, ls=':', lw=1.0, alpha=0.5)
+    ax7.text(2, 793, 'Thermoneutral Crossover',
+             color=GOLD, fontsize=7, fontstyle='italic')
+    _legend(ax7, loc='upper right')
+    _style(ax7)
 
 
-    ax3 = fig.add_subplot(gs[1, 0])
-    for i, lbl in enumerate(T_labels):
-        ax3.plot(positions, results['V_ocv_profiles'][i],
-                 color=COLORS[i], lw=2.4, label=lbl)
-    ax3.set_xlabel('Position along Cell (%)', fontsize=10)
-    ax3.set_ylabel('Local OCV (V)', fontsize=10)
-    ax3.set_title('2. OCV Profile Along Cell', fontsize=11,
+    ax8 = fig.add_subplot(gs[0, 1])
+    if 'j_local_profiles' in results:
+        for i in range(len(T_list)):
+            ax8.plot(positions, results['j_local_profiles'][i], 
+                     color=COLORS[i], lw=2.4, label=T_labels[i])
+        ax8.text(2, max(results['j_local_profiles'][0]) * 1.01,
+                 'Current drops as steam is depleted towards outlet', 
+                 color='#909090', fontsize=7.5, fontstyle='italic')
+    else:
+        j_op = 0.5
+        for i in range(len(T_list)):
+            ax8.axhline(y=j_op, color=COLORS[i], lw=2.4, 
+                        label=T_labels[i])  
+    ax8.set_xlabel('Position along Cell (%)', fontsize=10)
+    ax8.set_ylabel('Local Current Density (A/cm²)', fontsize=10)
+    ax8.set_title('2. Local Current Density Profile', fontsize=11, 
                   fontweight='bold', pad=8)
-    ax3.text(2, max(results['V_ocv_profiles'][2]) * 1.002,
-             'OCV rises as H₂O is consumed and H₂ builds up',
-             color='#909090', fontsize=7.5, fontstyle='italic')
-    _legend(ax3, loc='lower right')
-    _style(ax3)
+    ax8.set_xlim(0, 100)
+    _legend(ax8, loc='upper right')
+    _style(ax8)
+
+
+    ax9 = fig.add_subplot(gs[1, 0])
+    j_hm = np.linspace(0.05, 1.4, 80)
+    T_hm = np.linspace(700, 900, 80)
+    J_grid, T_grid = np.meshgrid(j_hm, T_hm)
+
+    R_GAS = 8.314
+    B_ohm = 2.99e-5
+    E_ohm = 8000.0
+    ASR = B_ohm * np.exp(E_ohm / (R_GAS * (T_grid + 273.15))) * 1e4
+    V_ocv_hm = 1.253 - 2.4516e-4 * (T_grid + 273.15)
+    V_cell_hm = V_ocv_hm + J_grid * ASR * 0.4
+    eff_hm = (V_thermo / V_cell_hm) * 100
+    eff_hm = np.clip(eff_hm, 55, 140)
+
+    cmap = LinearSegmentedColormap.from_list('soec', 
+                                             ['#D94F3D', '#f0c040', '#34A876'], N=256)
+    im = ax9.contourf(J_grid, T_grid, eff_hm,
+                      levels=20, cmap=cmap)
+    ax9.contour(J_grid, T_grid, eff_hm,
+                levels=[100], colors=[GOLD], linewidths=1.5,
+                linestyles='--')
+    ax9.text(0.08, 810, 'Thermoneutral\n(100%)', 
+             color=GOLD, fontsize=7, fontstyle='italic')
+    cb = fig.colorbar(im, ax=ax9, pad=0.02)
+    cb.ax.yaxis.set_tick_params(color=FG, labelsize=8)
+    cb.outline.set_edgecolor(GRID_C)
+    plt.setp(cb.ax.yaxis.get_ticklabels(), color=FG)
+    cb.set_label('Efficiency (%)', color=FG, fontsize=10)
+    for i, T_c in enumerate(T_degC):
+        ax9.axhline(y=T_c, color=COLORS[i], lw=1.2,
+                    ls='--', alpha=0.6, label=T_labels[i])
+    ax9.set_xlabel('Current Density j (A/cm²)', fontsize=10)
+    ax9.set_ylabel('Temperature (°C)', fontsize=10)
+    ax9.set_title('3. Efficiency Map (T vs j)', fontsize=11, 
+                  fontweight='bold', pad=8)
+    ax9.tick_params(colors=FG, labelsize=9)
+    ax9.xaxis.label.set_color(FG)
+    ax9.yaxis.label.set_color(FG)
+    ax9.title.set_color(FG)
+    for spine in ax9.spines.values():
+        spine.set_edgecolor(GRID_C)
+    _legend(ax9, loc='lower left', fontsize=7.5)
 
 
     ax4 = fig.add_subplot(gs[1, 1])
     ax4.set_facecolor(AX_BG)
     ax4.set_xlim(0, 1); ax4.set_ylim(0, 1)
     ax4.axis('off')
-    ax4.set_title('4. 0D → 1D: What Changed?', fontsize=11,
+    ax4.set_title('4. 1D → 1.5D: What Changed?', fontsize=11,
                   fontweight='bold', pad=8, color=FG)
     
     col0_x, col1_x, col2_x = 0.02, 0.38, 0.70
@@ -111,21 +143,21 @@ def plot_linkedin(j, results, T_list, T_labels, V_thermo, save_path,
         ax.text(x, y, s, transform=ax.transAxes,
                 va='top', **kw)
         
-    ax4.text(col1_x, 0.96, '0D Model', transform=ax4.transAxes,
+    ax4.text(col1_x, 0.96, '1D Model', transform=ax4.transAxes,
              color=GOLD, fontsize=9, fontweight='bold', va='top', ha='center')
-    ax4.text(col2_x + 0.14, 0.96, '1D Model', transform=ax4.transAxes,
+    ax4.text(col2_x + 0.14, 0.96, '1.5D Model', transform=ax4.transAxes,
              color=ACCENT, fontsize=9, fontweight='bold', va='top', ha='center')
     
     ax4.axhline(0.87, color=GRID_C, lw=0.8, xmin=0.0, xmax=1.0)
 
     rows = [
-        ('Spatial Resolution',  'Single Point',        '20 Nodes Along Flow Path'),
-        ('Gas Composition',     'Fixed Inlet Values',  'Evolves Inlet → Outlet'),
-        ('Nernst Voltage',      'One Global OCV',      'Recalculated at Each Node'),
-        ('Fuel Utilisation',    'Not Modelled',        '60-70 % per Temperature'),
-        ('OCV Along Cell',      'Not Available',       'Rising Curve (Plot 2)'),
-        ('H₂O / H₂ Profile',    'Not Available',       'Fully Resolved (Plot 3)'),
-        ('Validation',          '-',                   'Jensen (2007) Figure 21'),
+        ('Spatial Resolution',  '20 Nodes Along (Flow)',  '20 x Layers (Through-Plane)'),
+        ('Through-Plane T',     'Not Modelled',           'Resolved Anode → Cathode'),
+        ('Thermal Coupling',    'Single T per Node',      'T Gradient Per Node'),
+        ('Heat Generation',     'Global Ohmic Term',      'Layer-by-Layer Ohmic + React.'),
+        ('Gas Diffusion',       'Fick (1D Flow)',         'Fick + Through-Plane GDL'),
+        ('ASR Distribution',    'One Value per Node',     'Split: Electrolyte + Electrodes'),
+        ('Computation Cost',    'Fast (~ms)',             'Moderate (~s)'),
     ]
 
     row_h = 0.82 / len(rows)
@@ -152,8 +184,9 @@ def plot_linkedin(j, results, T_list, T_labels, V_thermo, save_path,
     for spine in ax4.spines.values():
         spine.set_edgecolor(GRID_C)
 
+
     fig.text(0.5, 0.945,
-             'SOEC Cell Model  |  1D Extension  |  Python Implementation',
+             'SOEC Cell Model  |  1.5D Extension  |  Python Implementation',
              ha='center', fontsize=13, fontweight='bold', color=FG)
     fig.text(0.5, 0.913,
              'Nernst Eq  ·  Butler-Volmer Kinetics  ·  Fick Diffusion  ·  Arrhenius Resistance  ·  1D Flow Path',

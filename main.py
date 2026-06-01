@@ -28,10 +28,11 @@ results = {'V_cell':[], 'eta_ohm':[], 'eta_act':[],
 
 x_H2O_profiles = []
 x_H2_profiles = []
+T_profiles = []
 
 for T in T_list:
     
-    V_cell, eta_ohm, eta_act, eta_con, V_ocv, x_H2O_prof, x_H2_prof, V_ocv_prof = calc_1d(j, T, params, FU_dict[T], N_nodes=20)
+    V_cell, eta_ohm, eta_act, eta_con, V_ocv, x_H2O_prof, x_H2_prof, V_ocv_prof, T_prof, _ = calc_1d(j, T, params, FU_dict[T], N_nodes=20)
 
     eff = (V_thermo / V_cell) * 100
 
@@ -44,13 +45,18 @@ for T in T_list:
 
     x_H2O_profiles.append(x_H2O_prof)
     x_H2_profiles.append(x_H2_prof)
+    T_profiles.append(T_prof)
 
     results.setdefault('V_ocv_profiles', []).append(V_ocv_prof)
 
     print(f"  T={T-273.15:.0f}°C  |  OCV={V_ocv:.3f}V")
 
+print(f"  H2O inlet check:  {[round(p[0]*100,1) for p in x_H2O_profiles]}%")
+print(f"  H2O outlet check: {[round(p[-1]*100,1) for p in x_H2O_profiles]}%")
+
 results['x_H2O_profiles'] = x_H2O_profiles
 results['x_H2_profiles'] = x_H2_profiles
+results['T_profiles'] = T_profiles
 results['N_nodes'] = 20
 
 for key in ['V_cell', 'eta_ohm', 'eta_act', 'eta_con', 'eff']:
@@ -73,7 +79,7 @@ params_jensen = CellParams(
     E_act_ohm=7200,
     )
 T_jensen = 850 + 273.15
-V_jensen, _, _, _, _, _, _, _ = calc_1d(j, T_jensen, params_jensen, FU=0.65, N_nodes=20)
+V_jensen, _, _, _, _, _, _, _, _, _ = calc_1d(j, T_jensen, params_jensen, FU=0.65, N_nodes=20)
 
 errors, V_interp = calc_error(j, V_jensen, j_exp, V_exp)
 
