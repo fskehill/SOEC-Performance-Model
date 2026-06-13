@@ -45,26 +45,40 @@ confirming the underlying physics is sound
 
 ---
 
-## Current Version: 1.5D
+## Current Version: Transient 1.5D
 
-Following on from the initial 1D flow path model, the current version is a 
-**1.5D architecture**. It divides the cell into 20 nodes along the flow 
-path while introducing a through-plane axis to resolve conditions layer-by-layer 
-from anode to cathode. It dynamically tracks local Nernst voltage shifts, 
-layer-by-layer ohmic and reaction heating, and Fickian gas diffusion through 
-the GDL.
+The current version extends the steady-state 1.5D architecture with full time-dependent 
+governing equations, allowing the cell to respond dynamically to changes in operating 
+conditions.
+
+---
+
+## Architecture
+
+- 20 nodes along the flow path (x-axis)
+- 5 layers through-plane per node: anode GDL → anode electrode → electrolyte →
+  cathode electrode → cathode GDL
+- Time derivatives on both energy and species equations
+- Stiff ODE solver (Radau) to handle coupled thermal and electrochemical timescales
+
+KEY FINDING: The electrochemical response (voltage, gas composition, fuel utilisation) 
+settles in seconds. The thermal response takes several minutes. This timescale seperation 
+is critical for renewable energy integration - input power can fluctuate rapidly, but the 
+cell's thermal mass cannot keep up.
 
 ---
 
 ## Roadmap
 
-|   Version   |                      What it adds                      |      Status      |
-|    -----    |                         ------                         |      ------      |
-|      0D     |           Single point, avg. gas composition           |       Done.      |
-|      1D     |            Full variation along cell length            |       Done.      |
-|     1.5D    |     Through-plane temp. & layer-by-layer gradients     |       Done.      |
-|      2D     |     Spatial temp. & current density distributions      |      Planned     |
-|      3D     |     Spatial temp. & current density distributions      |      Planned     |
+|        Version        |                      What it adds                      |      Status      |
+|         -----         |                         ------                         |      ------      |
+|           0D          |           Single point, avg. gas composition           |       Done.      |
+|           1D          |            Full variation along cell length            |       Done.      |
+|          1.5D         |     Through-plane temp. & layer-by-layer gradients     |       Done.      |
+|    Transient 1.5D     |   Time-resolved thermal and electrochemical response   |       Done.      |
+| Transient + Renewable |              Real wind/solar input profile             |    In Progress   |
+|           2D          |   Full spatial resolution: flow path + through-plane   |      Planned     |
+|           3D          |     Full cell volume: ANSYS Fluent CFD validation      |      Planned     |
 
 Following the modelling hierarchy used in published research from
 DTU Energy (Nemati et al., 2024).
@@ -94,10 +108,13 @@ SOEC_Project/
 |   ├── overpotentials.py     # Butler-Volmer, Fick, Arrhenius losses
 |   ├── plotter.py            # 4-panel results figure
 |   ├── thermal_1d.py
+|   ├── transient_solver.py
 |   ├── validator.py
 ├── outputs/
 |   └── SOEC_LinkedIn.png
 |   ├── SOEC_Results.png
+|   ├── SOEC_Transient_Results.png
+├── run_transient.py
 └── main.py
 
 # Run this

@@ -49,6 +49,6 @@ def calc_overpotentials(j, T, p):
     c_H2O = p_H2O / (R_GAS * T)
     j_lim = (N * F * p.D_eff_c * c_H2O) / p.L_cell * 1e-4
     eta_con = -(R_GAS * T / (N * F)) * np.log(1 - j_safe / j_lim)
-    eta_con[j >= j_lim * 0.98] = np.nan
+    eta_con = np.where(j >= j_lim * 0.98, np.nan, eta_con)
 
     return eta_ohm, eta_act, eta_con
