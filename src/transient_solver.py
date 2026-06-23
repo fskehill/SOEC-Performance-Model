@@ -52,6 +52,6 @@ def soec_ode(t, y, params, j_step_func, N_nodes):
 
         dCdt[i] = dx_H2O_conv - dx_H2O_rxn
 
-        dCdt = np.where(x_H2O_nodes < 0.05, np.maximum(dCdt, 0), dCdt)
+    dCdt = np.where(x_H2O_nodes < 0.05, np.maximum(dCdt, 0), dCdt)
 
     return np.concatenate([dTdt, dCdt])
